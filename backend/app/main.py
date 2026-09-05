@@ -4,11 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
+from sqlalchemy import select
 from app.core.config import settings
 from app.core.database import engine, Base, AsyncSessionLocal
 from app.models import Merchant, Customer, Transaction, RecoveryWorkflow, AuditLog, WebhookEvent, User
 from app.api.v1 import api_router
-from app.api.v1.demo import seed_demo_database
+from app.api.v1.demo import perform_seed
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,13 +17,15 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     
-    # Auto-seed demo dataset in development/demo mode only
-    if settings.ENVIRONMENT != "production":
-        async with AsyncSessionLocal() as session:
-            try:
-                await seed_demo_database(session)
-            except Exception:
-                pass
+    # Initialize baseline dataset if database is brand new / unseeded
+    async with AsyncSessionLocal() as session:
+        try:
+            stmt = select(Merchant).where(Merchant.id == "merch_razorpay_demo")
+            res = await session.execute(stmt)
+            if not res.scalar_one_or_none():
+                await perform_seed(session)
+        except Exception:
+            pass
 
     yield
     await engine.dispose()

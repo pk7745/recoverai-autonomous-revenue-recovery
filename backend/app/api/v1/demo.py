@@ -69,7 +69,7 @@ async def reset_demo_database(db: AsyncSession = Depends(get_db)):
     await db.commit()
     
     # Re-seed baseline data
-    await seed_demo_database(db)
+    await perform_seed(db)
     return {"status": "success", "message": "Demo database successfully reset and seeded."}
 
 @router.post("/seed")
@@ -79,7 +79,10 @@ async def seed_demo_database(db: AsyncSession = Depends(get_db)):
             status_code=403,
             detail="Demo seeding endpoint is disabled in production environment."
         )
+    await perform_seed(db)
+    return {"status": "success", "message": "Demo data successfully seeded"}
 
+async def perform_seed(db: AsyncSession):
     merchant = await ensure_demo_merchant(db)
 
     # Seed Authenticated Demo Users
