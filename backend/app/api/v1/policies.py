@@ -14,6 +14,7 @@ from app.core.enums import ActorType
 router = APIRouter(prefix="/policies", tags=["Policies"])
 
 @router.get("", response_model=MerchantPolicyResponse)
+@router.get("/", response_model=MerchantPolicyResponse, include_in_schema=False)
 async def get_merchant_policy(db: AsyncSession = Depends(get_db)):
     stmt = select(Merchant).limit(1)
     res = await db.execute(stmt)

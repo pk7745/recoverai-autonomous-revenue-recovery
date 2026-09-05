@@ -20,6 +20,7 @@ router = APIRouter(prefix="/recovery", tags=["Recovery Workflows"])
 orchestrator = RecoveryOrchestrator()
 
 @router.get("", response_model=List[RecoveryWorkflowResponse])
+@router.get("/", response_model=List[RecoveryWorkflowResponse], include_in_schema=False)
 async def list_recovery_workflows(
     state: Optional[str] = Query(None),
     limit: int = Query(50, le=100),
