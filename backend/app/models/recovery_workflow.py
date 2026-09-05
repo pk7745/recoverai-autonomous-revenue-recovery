@@ -19,8 +19,8 @@ class RecoveryWorkflow(Base):
     recovered_amount = Column(Float, default=0.0)
     stopping_rule_triggered = Column(String(128), nullable=True)
     escalation_reason = Column(String(256), nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     transaction = relationship("Transaction", back_populates="workflow")
     audit_logs = relationship("AuditLog", back_populates="workflow", cascade="all, delete-orphan")

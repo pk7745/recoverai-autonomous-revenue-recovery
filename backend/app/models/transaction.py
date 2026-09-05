@@ -19,8 +19,8 @@ class Transaction(Base):
     payment_method = Column(String(32), nullable=True)  # card, upi, netbanking, wallet
     attempts_count = Column(Integer, default=1)
     metadata_info = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     merchant = relationship("Merchant", back_populates="transactions")
     customer = relationship("Customer", back_populates="transactions")

@@ -14,7 +14,7 @@ class Merchant(Base):
     max_retries = Column(Integer, default=2)
     min_retry_interval_mins = Column(Integer, default=30)
     risk_threshold = Column(Float, default=0.70)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     transactions = relationship("Transaction", back_populates="merchant", cascade="all, delete-orphan")
     customers = relationship("Customer", back_populates="merchant", cascade="all, delete-orphan")

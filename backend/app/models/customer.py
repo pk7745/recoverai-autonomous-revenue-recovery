@@ -15,7 +15,7 @@ class Customer(Base):
     total_failed_payments = Column(Integer, default=0)
     is_returning = Column(Boolean, default=False)
     risk_tier = Column(String(32), default="LOW")  # LOW, MEDIUM, HIGH, CRITICAL
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     merchant = relationship("Merchant", back_populates="customers")
     transactions = relationship("Transaction", back_populates="customer")

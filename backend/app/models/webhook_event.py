@@ -13,4 +13,4 @@ class WebhookEvent(Base):
     signature = Column(String(128), nullable=True)
     is_duplicate = Column(Boolean, default=False)
     processed = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)

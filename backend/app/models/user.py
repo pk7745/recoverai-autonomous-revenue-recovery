@@ -12,6 +12,6 @@ class User(Base):
     name = Column(String(128), nullable=False)
     hashed_password = Column(String(256), nullable=False)
     role = Column(String(32), default="OPERATIONS_AGENT", nullable=False)  # MERCHANT_ADMIN, OPERATIONS_AGENT
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     merchant = relationship("Merchant")
