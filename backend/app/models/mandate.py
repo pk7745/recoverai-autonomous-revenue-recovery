@@ -17,7 +17,7 @@ class Mandate(Base):
     frequency = Column(String(32), default="MONTHLY")  # AS_PRESENTED, MONTHLY, QUARTERLY
     status = Column(String(32), default="SEQUENCED", index=True)  # ACTIVE, PAUSED, SEQUENCED, STOPPED, CAPTURED
     attempt_number = Column(Integer, default=1)
-    max_attempts = Column(Integer, default=3)  # RBI hard rule limit
+    max_attempts = Column(Integer, default=3)  # Configurable retry limit
     failure_code = Column(String(64), default="ISSUER_CLEARING_UNAVAILABLE")
     next_attempt_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)

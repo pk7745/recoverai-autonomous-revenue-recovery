@@ -393,7 +393,7 @@ class HybridExpertAIProvider(BaseAIProvider):
         if attempt_number >= 3:
             recommended_action = InterventionType.STOP
             confidence = 0.97
-            summary = "Mandate reached RBI 3-attempt ceiling. Halting automated debit presentation."
+            summary = "Mandate reached configured max retry limit (3 attempts). Halting automated debit presentation."
             expected_amount = 0.0
         else:
             recommended_action = InterventionType.MANDATE_STEP_SEQUENCE

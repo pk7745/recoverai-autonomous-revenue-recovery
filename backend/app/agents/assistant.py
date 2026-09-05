@@ -87,7 +87,7 @@ class OperationsAssistant:
                     "summary": f"Mandate {man.id} ({man.mandate_type})",
                     "observed_data": f"Scheduled Amount: ₹{man.scheduled_amount:,.2f} | Frequency: {man.frequency} | Retries: {man.attempt_number}/{man.max_attempts} | Status: {man.status}",
                     "ai_recommendation": "Debit retry sequencer predicting high-liquidity clearing windows.",
-                    "policy_decision": "RBI Compliance Guardrail: Maximum 3 retry attempts hard cap.",
+                    "policy_decision": f"Configured Policy Guardrail: Maximum {man.max_attempts} retry attempts cap.",
                     "final_outcome": f"Next retry attempt: {man.next_attempt_at or 'Sequenced'}",
                     "references": [man.id]
                 }
@@ -99,7 +99,7 @@ class OperationsAssistant:
                     "summary": f"Hinglish Voice Recovery Session {voc.id} ({voc.phone_number})",
                     "observed_data": f"Language: {voc.language} | Status: {voc.call_status} | Intent: {voc.detected_intent} | Duration: {voc.duration_seconds}s",
                     "ai_recommendation": f"Generated Script: {voc.generated_script[:80]}...",
-                    "policy_decision": "TRAI Calling Window Compliance: Outbound voice calls strictly constrained to 9:00 AM - 8:00 PM IST.",
+                    "policy_decision": "Operational Contact Window: Outbound voice calls constrained to 9:00 AM - 8:00 PM IST.",
                     "final_outcome": f"Call Status: {voc.call_status} (Link Sent: {voc.payment_link_sent})",
                     "references": [voc.id]
                 }
@@ -269,8 +269,8 @@ class OperationsAssistant:
                 "summary": "RecoverAI 7-Program Revenue Recovery Architecture",
                 "observed_data": "Seven specialized pipelines active: 1. Payment Degradation Recovery, 2. Checkout Drop-off Recovery, 3. Failed-Subscription Dunning, 4. B2B Receivables Chaser, 5. Mandate Retry Sequencer, 6. Hinglish Voice Recovery, 7. Promise-to-Pay (PTP) Tracker.",
                 "ai_recommendation": "All 7 programs utilize specialized AI reasoning with bounded deterministic guardrails.",
-                "policy_decision": "Deterministic rules enforce RBI caps (mandates), TRAI hours (voice), 24h subscription cooldowns, and credit score breach escalations.",
-                "final_outcome": "Unified audit logging and SSE telemetry across all 7 operational programs.",
+                "policy_decision": "Deterministic rules enforce configured mandate retry caps, operational contact windows (9am-8pm IST), 24h subscription cooldowns, and commitment breach escalations.",
+                "final_outcome": "Unified database audit logging and SSE telemetry across all 7 operational programs.",
                 "references": ["programs"]
             }
 

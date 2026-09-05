@@ -265,7 +265,7 @@ export const RecoveryProgramsPage: React.FC<RecoveryProgramsPageProps> = () => {
     { id: 'checkout', label: 'Checkout Drop-off', icon: ShoppingCart, count: checkoutSessions.length, badge: 'Cart Recapture' },
     { id: 'subscription', label: 'Subscription Dunning', icon: Repeat, count: subscriptions.length, badge: 'Recurring Retention' },
     { id: 'receivables', label: 'B2B Receivables', icon: Building2, count: receivables.length, badge: 'Invoice Chaser' },
-    { id: 'mandates', label: 'Mandate Sequencer', icon: CreditCard, count: mandates.length, badge: 'RBI 3-Cap Guarded' },
+    { id: 'mandates', label: 'Mandate Sequencer', icon: CreditCard, count: mandates.length, badge: 'Configured Cap (3 Max)' },
     { id: 'voice', label: 'Hinglish Voice Recovery', icon: Mic, count: voiceSessions.length, badge: 'AI Conversational' },
     { id: 'promises', label: 'Promise-to-Pay (PTP)', icon: Handshake, count: promises.length, badge: 'SLA Commitment' }
   ]
@@ -321,7 +321,7 @@ export const RecoveryProgramsPage: React.FC<RecoveryProgramsPageProps> = () => {
             </span>
           </div>
           <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Recaptured Value</span>
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Recaptured Volume (TEST_MODE & SIMULATED)</span>
             <div className="text-2xl font-bold text-emerald-400 mt-1">{formatINR(overview.total_recovered_inr)}</div>
             <span className="text-[10px] text-slate-400 mt-1 inline-flex items-center">
               <TrendingUp className="w-3 h-3 mr-1 text-emerald-400" /> Razorpay Test Mode & Simulated
@@ -335,7 +335,7 @@ export const RecoveryProgramsPage: React.FC<RecoveryProgramsPageProps> = () => {
           <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Policy Engine Guardrails</span>
             <div className="text-2xl font-bold text-sky-400 mt-1">100%</div>
-            <span className="text-[10px] text-slate-400 mt-1">RBI 3-Cap & TRAI Time Bounded</span>
+            <span className="text-[10px] text-slate-400 mt-1">Policy Cap & Operational Hours Bounded</span>
           </div>
         </div>
       )}
@@ -619,10 +619,10 @@ export const RecoveryProgramsPage: React.FC<RecoveryProgramsPageProps> = () => {
           <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-white">Program 5 — Mandate Retry Sequencer</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Strictly enforces RBI 3-attempt hard caps on UPI AutoPay and eNACH debits, preventing clearing penalty fees through intelligent liquidity window prediction.</p>
+              <p className="text-xs text-slate-400 mt-0.5">Strictly enforces configured 3-attempt maximum retries on UPI AutoPay and eNACH debits, preventing unnecessary bank clearing penalties through intelligent liquidity window prediction.</p>
             </div>
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-              RBI Hard Cap Enforced
+              Configured Retry Cap
             </span>
           </div>
 
@@ -635,7 +635,7 @@ export const RecoveryProgramsPage: React.FC<RecoveryProgramsPageProps> = () => {
                     <th className="p-4">Holder</th>
                     <th className="p-4">Type</th>
                     <th className="p-4">Scheduled Debit</th>
-                    <th className="p-4">RBI Retry Count</th>
+                    <th className="p-4">Retry Attempts</th>
                     <th className="p-4">Status</th>
                     <th className="p-4 text-right">Autonomous Actions</th>
                   </tr>
@@ -655,7 +655,7 @@ export const RecoveryProgramsPage: React.FC<RecoveryProgramsPageProps> = () => {
                         <span className={`font-mono text-xs font-bold ${
                           m.attempt_number >= 3 ? 'text-rose-400' : 'text-emerald-400'
                         }`}>
-                          {m.attempt_number} / {m.max_attempts} (RBI Hard Cap)
+                          {m.attempt_number} / {m.max_attempts} (Policy Cap)
                         </span>
                       </td>
                       <td className="p-4">
@@ -701,10 +701,10 @@ export const RecoveryProgramsPage: React.FC<RecoveryProgramsPageProps> = () => {
           <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-white">Program 6 — Hinglish Voice Recovery Agent</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Empathetic conversational outreach using authentic Indian regional dialects (Delhi NCR, Mumbai) with real-time sentiment tracking and TRAI 9am-8pm IST time constraints.</p>
+              <p className="text-xs text-slate-400 mt-0.5">Empathetic conversational outreach using authentic Indian regional dialects (Delhi NCR, Mumbai) with real-time sentiment tracking and configured 9:00 AM–8:00 PM IST contact window.</p>
             </div>
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              TRAI Compliant
+              Operational Window (9am-8pm IST)
             </span>
           </div>
 

@@ -14,6 +14,8 @@ from app.models.mandate import Mandate
 from app.models.promise_to_pay import PromiseToPay
 from app.models.voice_session import VoiceRecoverySession
 from app.models.customer import Customer
+from app.models.user import User
+from app.core.auth import require_role
 from app.recovery.orchestrator import RecoveryOrchestrator
 from app.schemas.recovery import RecoveryWorkflowResponse
 
@@ -154,7 +156,11 @@ async def list_checkout_sessions(
     return result
 
 @router.post("/checkout/{session_id}/plan")
-async def plan_checkout_recovery(session_id: str, db: AsyncSession = Depends(get_db)):
+async def plan_checkout_recovery(
+    session_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.plan_checkout_recovery(db, session_id)
         await db.commit()
@@ -163,7 +169,11 @@ async def plan_checkout_recovery(session_id: str, db: AsyncSession = Depends(get
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/checkout/{session_id}/execute")
-async def execute_checkout_recovery(session_id: str, db: AsyncSession = Depends(get_db)):
+async def execute_checkout_recovery(
+    session_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.execute_checkout_recovery(db, session_id)
         await db.commit()
@@ -227,7 +237,11 @@ async def list_subscriptions(
     return result
 
 @router.post("/subscriptions/{subscription_id}/plan")
-async def plan_subscription_recovery(subscription_id: str, db: AsyncSession = Depends(get_db)):
+async def plan_subscription_recovery(
+    subscription_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.plan_subscription_recovery(db, subscription_id)
         await db.commit()
@@ -236,7 +250,11 @@ async def plan_subscription_recovery(subscription_id: str, db: AsyncSession = De
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/subscriptions/{subscription_id}/execute")
-async def execute_subscription_recovery(subscription_id: str, db: AsyncSession = Depends(get_db)):
+async def execute_subscription_recovery(
+    subscription_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.execute_subscription_recovery(db, subscription_id)
         await db.commit()
@@ -301,7 +319,11 @@ async def list_receivable_invoices(
     return result
 
 @router.post("/receivables/{invoice_id}/plan")
-async def plan_receivable_chasing(invoice_id: str, db: AsyncSession = Depends(get_db)):
+async def plan_receivable_chasing(
+    invoice_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.plan_receivable_chasing(db, invoice_id)
         await db.commit()
@@ -310,7 +332,11 @@ async def plan_receivable_chasing(invoice_id: str, db: AsyncSession = Depends(ge
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/receivables/{invoice_id}/execute")
-async def execute_receivable_chasing(invoice_id: str, db: AsyncSession = Depends(get_db)):
+async def execute_receivable_chasing(
+    invoice_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.execute_receivable_chasing(db, invoice_id)
         await db.commit()
@@ -375,7 +401,11 @@ async def list_mandates(
     return result
 
 @router.post("/mandates/{mandate_id}/plan")
-async def plan_mandate_sequence(mandate_id: str, db: AsyncSession = Depends(get_db)):
+async def plan_mandate_sequence(
+    mandate_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.plan_mandate_sequence(db, mandate_id)
         await db.commit()
@@ -384,7 +414,11 @@ async def plan_mandate_sequence(mandate_id: str, db: AsyncSession = Depends(get_
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/mandates/{mandate_id}/execute")
-async def execute_mandate_sequence(mandate_id: str, db: AsyncSession = Depends(get_db)):
+async def execute_mandate_sequence(
+    mandate_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.execute_mandate_sequence(db, mandate_id)
         await db.commit()
@@ -447,7 +481,11 @@ async def list_voice_sessions(
     return result
 
 @router.post("/voice/{session_id}/plan")
-async def plan_voice_recovery(session_id: str, db: AsyncSession = Depends(get_db)):
+async def plan_voice_recovery(
+    session_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.plan_voice_recovery(db, session_id)
         await db.commit()
@@ -456,7 +494,11 @@ async def plan_voice_recovery(session_id: str, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/voice/{session_id}/execute")
-async def execute_voice_recovery(session_id: str, db: AsyncSession = Depends(get_db)):
+async def execute_voice_recovery(
+    session_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.execute_voice_recovery(db, session_id)
         await db.commit()
@@ -521,7 +563,11 @@ async def list_promises_to_pay(
     return result
 
 @router.post("/promises/{ptp_id}/plan")
-async def plan_promise_to_pay(ptp_id: str, db: AsyncSession = Depends(get_db)):
+async def plan_promise_to_pay(
+    ptp_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.plan_promise_to_pay(db, ptp_id)
         await db.commit()
@@ -530,7 +576,11 @@ async def plan_promise_to_pay(ptp_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/promises/{ptp_id}/fulfill")
-async def fulfill_promise_to_pay(ptp_id: str, db: AsyncSession = Depends(get_db)):
+async def fulfill_promise_to_pay(
+    ptp_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.fulfill_promise_to_pay(db, ptp_id)
         await db.commit()
@@ -539,7 +589,11 @@ async def fulfill_promise_to_pay(ptp_id: str, db: AsyncSession = Depends(get_db)
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/promises/{ptp_id}/breach")
-async def breach_promise_to_pay(ptp_id: str, db: AsyncSession = Depends(get_db)):
+async def breach_promise_to_pay(
+    ptp_id: str,
+    current_user: User = Depends(require_role(["MERCHANT_ADMIN"])),
+    db: AsyncSession = Depends(get_db)
+):
     try:
         _, wf = await orchestrator.breach_promise_to_pay(db, ptp_id)
         await db.commit()

@@ -296,3 +296,67 @@ async def test_operations_assistant_program_queries():
     assert "chk_test_777" in ans_chk["summary"]
     assert "7,200" in ans_chk["summary"]
     await db_session.close()
+
+
+@pytest.mark.asyncio
+async def test_policy_engine_neutralized_rules():
+    from app.policies.policy_engine import PolicyEngine
+    from app.core.enums import InterventionType, RecoveryType, PolicyResultStatus
+    from app.models.user import User
+    from app.core.auth import require_role
+    from fastapi import HTTPException
+
+    # 1. Verify configured mandate retry ceiling
+    decision_mandate = PolicyEngine.evaluate(
+        recommended_action=InterventionType.MANDATE_STEP_SEQUENCE,
+        amount=4500.0,
+        attempts_count=3, # at configured ceiling
+        risk_score=0.2,
+        is_returning_customer=True,
+        autonomous_limit=50000.0,
+        max_retries=3,
+        recovery_type=RecoveryType.MANDATE
+    )
+    assert decision_mandate.status == PolicyResultStatus.STOPPED
+    assert any(c.rule_name == "CONFIGURED_MANDATE_RETRY_CEILING" and not c.passed for c in decision_mandate.checks)
+
+    # 2. Verify operational contact window rule outside 9am-8pm
+    decision_night = PolicyEngine.evaluate(
+        recommended_action=InterventionType.HINGLISH_VOICE_OUTREACH,
+        amount=1500.0,
+        attempts_count=0,
+        risk_score=0.1,
+        is_returning_customer=True,
+        autonomous_limit=50000.0,
+        recovery_type=RecoveryType.VOICE_RECOVERY,
+        is_within_contact_hours=False
+    )
+    assert decision_night.status == PolicyResultStatus.STOPPED
+    assert any(c.rule_name == "OPERATIONAL_CONTACT_HOURS_GATE" and not c.passed for c in decision_night.checks)
+
+    # 3. RBAC Role Enforcement on Mutating Program Endpoints
+    from fastapi.security import HTTPAuthorizationCredentials
+    from app.core.auth import create_access_token
+
+    db_session = await setup_test_db()
+    admin_user = User(id="u_admin_p", merchant_id="merch_razorpay_demo", name="Admin User", email="admin_p@test.com", role="MERCHANT_ADMIN", hashed_password="")
+    ops_user = User(id="u_ops_p", merchant_id="merch_razorpay_demo", name="Ops User", email="ops_p@test.com", role="OPERATIONS_AGENT", hashed_password="")
+    db_session.add_all([admin_user, ops_user])
+    await db_session.commit()
+
+    admin_token = create_access_token({"sub": admin_user.id, "role": "MERCHANT_ADMIN"})
+    ops_token = create_access_token({"sub": ops_user.id, "role": "OPERATIONS_AGENT"})
+
+    admin_checker = require_role(["MERCHANT_ADMIN"])
+    
+    # Admin is granted access
+    granted = await admin_checker(auth=HTTPAuthorizationCredentials(scheme="Bearer", credentials=admin_token), db=db_session)
+    assert granted.role == "MERCHANT_ADMIN"
+
+    # Ops Agent is denied with 403 Forbidden
+    with pytest.raises(HTTPException) as exc_info:
+        await admin_checker(auth=HTTPAuthorizationCredentials(scheme="Bearer", credentials=ops_token), db=db_session)
+    assert exc_info.value.status_code == 403
+    assert "Permission denied" in exc_info.value.detail
+    await db_session.close()
+

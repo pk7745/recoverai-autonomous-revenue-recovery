@@ -54,53 +54,53 @@ class PolicyEngine:
 
         # Program-Specific Rule Checks
 
-        # Mandate Specific: RBI 3-Attempt Hard Ceiling
+        # Mandate Specific: Configured Mandate Max Retries Rule (Default: 3 Attempts)
         if recovery_type == RecoveryType.MANDATE:
-            mandate_ceiling = 3
+            mandate_ceiling = max_retries or 3
             if attempts_count >= mandate_ceiling:
                 checks.append(PolicyCheckItem(
-                    rule_name="RBI_MANDATE_ATTEMPT_CEILING",
-                    rule_description=f"Mandate presentation strictly capped at {mandate_ceiling} attempts under clearing regulations",
+                    rule_name="CONFIGURED_MANDATE_RETRY_CEILING",
+                    rule_description=f"Mandate presentation capped at configured limit of {mandate_ceiling} attempts",
                     passed=False,
-                    details=f"Current attempt {attempts_count} reached maximum regulatory clearing ceiling ({mandate_ceiling})."
+                    details=f"Current attempt {attempts_count} reached maximum configured clearing ceiling ({mandate_ceiling})."
                 ))
                 return PolicyEvaluationResult(
                     status=PolicyResultStatus.STOPPED,
                     allowed_action=InterventionType.STOP,
                     requires_human_approval=False,
                     checks=checks,
-                    rejection_reason=f"RBI mandate attempt limit ({mandate_ceiling}) reached. Halting automated debit presentation."
+                    rejection_reason=f"Configured mandate attempt limit ({mandate_ceiling}) reached. Halting automated debit presentation."
                 )
             else:
                 checks.append(PolicyCheckItem(
-                    rule_name="RBI_MANDATE_ATTEMPT_CEILING",
-                    rule_description=f"Mandate presentation strictly capped at {mandate_ceiling} attempts",
+                    rule_name="CONFIGURED_MANDATE_RETRY_CEILING",
+                    rule_description=f"Mandate presentation capped at configured limit of {mandate_ceiling} attempts",
                     passed=True,
                     details=f"Attempt {attempts_count} is within allowable mandate presentation bounds ({mandate_ceiling})."
                 ))
 
-        # Voice Specific: TRAI / RBI Contact Hours Window (09:00 - 20:00 IST)
+        # Voice Specific: Configured Operational Contact Window (09:00 - 20:00 IST)
         if recovery_type == RecoveryType.VOICE_RECOVERY:
             if not is_within_contact_hours:
                 checks.append(PolicyCheckItem(
-                    rule_name="TRAI_CONTACT_HOURS_GATE",
-                    rule_description="Automated voice recovery permitted strictly between 09:00 - 20:00 IST",
+                    rule_name="OPERATIONAL_CONTACT_HOURS_GATE",
+                    rule_description="Automated voice recovery permitted strictly during configured hours (09:00 - 20:00 IST)",
                     passed=False,
-                    details="Current time is outside permitted contact window. Voice call blocked."
+                    details="Current time is outside configured operational contact window. Voice call blocked."
                 ))
                 return PolicyEvaluationResult(
                     status=PolicyResultStatus.STOPPED,
                     allowed_action=InterventionType.PAYMENT_LINK,
                     requires_human_approval=False,
                     checks=checks,
-                    rejection_reason="Outside permitted communication window (09:00-20:00 IST). Switched to non-intrusive payment link."
+                    rejection_reason="Outside configured contact window (09:00-20:00 IST). Switched to non-intrusive payment link."
                 )
             else:
                 checks.append(PolicyCheckItem(
-                    rule_name="TRAI_CONTACT_HOURS_GATE",
-                    rule_description="Automated voice recovery permitted strictly between 09:00 - 20:00 IST",
+                    rule_name="OPERATIONAL_CONTACT_HOURS_GATE",
+                    rule_description="Automated voice recovery permitted strictly during configured hours (09:00 - 20:00 IST)",
                     passed=True,
-                    details="Contact time is within legitimate business window."
+                    details="Contact time is within legitimate operational window."
                 ))
 
         # Promise-to-Pay Specific: Debtor Reliability and Repeat Breach Guard
