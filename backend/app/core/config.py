@@ -43,9 +43,11 @@ class Settings(BaseSettings):
     def get_async_database_url(self) -> str:
         """
         Parses and formats DATABASE_URL for async SQLAlchemy engines.
-        Converts Render / Heroku postgres:// or postgresql:// to postgresql+asyncpg://
-        and converts sqlite:// to sqlite+aiosqlite://
+        Converts Render / Heroku / Neon postgres:// or postgresql:// to postgresql+asyncpg://
+        and cleans libpq parameters (like channel_binding, sslmode) for asyncpg compatibility.
         """
+        from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+
         url = self.DATABASE_URL.strip()
         
         # PostgreSQL URL format detection
@@ -53,15 +55,28 @@ class Settings(BaseSettings):
             url = url.replace("postgres://", "postgresql+asyncpg://", 1)
         elif url.startswith("postgresql://"):
             url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        
-        # SQLite URL format detection
         elif url.startswith("sqlite://") and not url.startswith("sqlite+aiosqlite://"):
             url = url.replace("sqlite://", "sqlite+aiosqlite://", 1)
             
-        # Clean query parameters for asyncpg compatibility
-        if "postgresql+asyncpg://" in url and "sslmode=" in url:
-            # asyncpg accepts ssl=require instead of sslmode=require
-            url = re.sub(r'sslmode=[^&]+', 'ssl=require', url)
+        if "postgresql+asyncpg://" in url:
+            parsed = urlparse(url)
+            query_dict = parse_qs(parsed.query)
+            
+            clean_params = {}
+            for k, v in query_dict.items():
+                if k == "sslmode":
+                    clean_params["ssl"] = "require"
+                elif k in ["channel_binding", "target_session_attrs", "options", "gssencmode"]:
+                    # asyncpg connect does not accept these libpq/psycopg2 keyword arguments
+                    continue
+                else:
+                    clean_params[k] = v[0] if len(v) == 1 else v
+                    
+            if "ssl" not in clean_params and ("sslmode" in query_dict or "neon.tech" in url or "render.com" in url):
+                clean_params["ssl"] = "require"
+                
+            new_query = urlencode(clean_params, doseq=True)
+            url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment))
             
         return url
 
