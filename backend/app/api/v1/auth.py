@@ -29,9 +29,20 @@ class LoginResponse(BaseModel):
 @router.post("/login", response_model=LoginResponse)
 async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
     """Authenticates merchant user and returns a signed JWT access token."""
-    stmt = select(User).where(User.email == req.email.lower().strip())
+    email_clean = req.email.lower().strip()
+    stmt = select(User).where(User.email == email_clean)
     res = await db.execute(stmt)
     user = res.scalar_one_or_none()
+
+    # Self-heal initial demo accounts on first login if database was unseeded
+    if not user and email_clean in ["admin@acrobatics.com", "ops@acrobatics.com"]:
+        from app.core.auth import ensure_initial_users
+        try:
+            await ensure_initial_users(db)
+            res = await db.execute(stmt)
+            user = res.scalar_one_or_none()
+        except Exception:
+            pass
 
     if not user or not verify_password(req.password, user.hashed_password):
         raise HTTPException(
