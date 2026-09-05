@@ -22,6 +22,8 @@ import {
   AuditLog
 } from './types'
 
+import { RecoveryProgramsPage } from './pages/RecoveryProgramsPage'
+
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth()
 
@@ -155,6 +157,7 @@ const AppContent: React.FC = () => {
   const getTabLabel = (tab: TabId) => {
     switch (tab) {
       case 'overview': return 'Command Center'
+      case 'programs': return 'Recovery Programs'
       case 'queue': return 'Recovery Queue'
       case 'safety': return 'Safety Center'
       case 'policies': return 'Merchant Policies'
@@ -189,6 +192,12 @@ const AppContent: React.FC = () => {
               onSelectWorkflow={setSelectedWorkflow}
               onNavigateToQueue={() => setCurrentTab('queue')}
               onNavigateToDemo={() => setCurrentTab('demo')}
+            />
+          )}
+
+          {currentTab === 'programs' && (
+            <RecoveryProgramsPage
+              onSelectWorkflow={handleSelectWorkflowById}
             />
           )}
 

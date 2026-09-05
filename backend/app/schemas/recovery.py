@@ -64,11 +64,14 @@ class TransactionSummary(BaseModel):
 
 class RecoveryWorkflowResponse(BaseModel):
     id: str
-    transaction_id: str
+    recovery_type: Optional[str] = "PAYMENT"
+    reference_id: Optional[str] = None
+    transaction_id: Optional[str] = None
     state: RecoveryState
     risk_score: float
     failure_category: FailureCategory
     recommended_action: InterventionType
+    execution_mode: Optional[str] = "SIMULATED"
     ai_confidence: float
     ai_reasoning: Optional[Dict[str, Any]] = None
     policy_evaluation: Optional[Dict[str, Any]] = None

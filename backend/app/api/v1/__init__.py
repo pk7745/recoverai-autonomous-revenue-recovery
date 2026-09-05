@@ -10,10 +10,12 @@ from app.api.v1.demo import router as demo_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.events import router as events_router
 from app.api.v1.assistant import router as assistant_router
+from app.api.v1.programs import router as programs_router
 
 api_router = APIRouter()
 api_router.include_router(dashboard_router)
 api_router.include_router(recovery_router)
+api_router.include_router(programs_router)
 api_router.include_router(policies_router)
 api_router.include_router(safety_router)
 api_router.include_router(experiments_router)

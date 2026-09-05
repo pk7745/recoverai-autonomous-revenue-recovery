@@ -8,6 +8,12 @@ from app.models.transaction import Transaction
 from app.models.recovery_workflow import RecoveryWorkflow
 from app.models.merchant import Merchant
 from app.models.audit_log import AuditLog
+from app.models.checkout_session import CheckoutSession
+from app.models.subscription import Subscription
+from app.models.receivable_invoice import ReceivableInvoice
+from app.models.mandate import Mandate
+from app.models.promise_to_pay import PromiseToPay
+from app.models.voice_session import VoiceRecoverySession
 from app.analytics.metrics_service import MetricsService
 
 class OperationsAssistant:
@@ -17,12 +23,98 @@ class OperationsAssistant:
     async def answer_query(db: AsyncSession, query: str, context_workflow_id: Optional[str] = None) -> Dict[str, Any]:
         query_lower = query.lower().strip()
 
-        # 1. Extract Transaction or Workflow IDs from query
+        # 1. Extract IDs from query
         txn_match = re.search(r'(txn_[a-zA-Z0-9_]+)', query)
         wf_match = re.search(r'(rec_[a-zA-Z0-9_]+)', query)
+        chk_match = re.search(r'(chk_[a-zA-Z0-9_]+)', query)
+        sub_match = re.search(r'(sub_[a-zA-Z0-9_]+)', query)
+        inv_match = re.search(r'(inv_[a-zA-Z0-9_]+)', query)
+        man_match = re.search(r'(man_[a-zA-Z0-9_]+)', query)
+        voc_match = re.search(r'(voc_[a-zA-Z0-9_]+)', query)
+        ptp_match = re.search(r'(ptp_[a-zA-Z0-9_]+)', query)
 
         target_txn_id = txn_match.group(1) if txn_match else None
         target_wf_id = wf_match.group(1) if wf_match else context_workflow_id
+        target_chk_id = chk_match.group(1) if chk_match else None
+        target_sub_id = sub_match.group(1) if sub_match else None
+        target_inv_id = inv_match.group(1) if inv_match else None
+        target_man_id = man_match.group(1) if man_match else None
+        target_voc_id = voc_match.group(1) if voc_match else None
+        target_ptp_id = ptp_match.group(1) if ptp_match else None
+
+        # Check Program Entity Direct Queries
+        if target_chk_id:
+            chk = (await db.execute(select(CheckoutSession).where(CheckoutSession.id == target_chk_id))).scalar_one_or_none()
+            if chk:
+                return {
+                    "query": query,
+                    "summary": f"Checkout Session {chk.id} (Cart: ₹{chk.cart_value:,.2f})",
+                    "observed_data": f"Exit Step: {chk.exit_step} | Detected Friction: {chk.detected_friction} | Items: {chk.items_count} | Status: {chk.recovery_status}",
+                    "ai_recommendation": f"Tailored checkout recovery incentive/link (URL: {chk.recovery_link_url or 'Generated dynamically'}).",
+                    "policy_decision": "Subject to checkout recovery policy & rate limits.",
+                    "final_outcome": f"Session recovery status is {chk.recovery_status}.",
+                    "references": [chk.id]
+                }
+        if target_sub_id:
+            sub = (await db.execute(select(Subscription).where(Subscription.id == target_sub_id))).scalar_one_or_none()
+            if sub:
+                return {
+                    "query": query,
+                    "summary": f"Subscription {sub.id} ({sub.plan_name} - ₹{sub.recurring_amount:,.2f})",
+                    "observed_data": f"Status: {sub.status} | Interval: {sub.billing_interval} | Failed Attempts: {sub.failed_attempts}/{sub.max_retries} | Reason: {sub.last_failure_reason or 'None'}",
+                    "ai_recommendation": "Smart dunning sequence with optimal retry windows (salary cycle sync).",
+                    "policy_decision": f"Bounded by {sub.cooldown_hours}h subscription cooldown and max {sub.max_retries} retry limit.",
+                    "final_outcome": f"Next retry scheduled at: {sub.next_retry_at or 'In Dunning'}",
+                    "references": [sub.id]
+                }
+        if target_inv_id:
+            inv = (await db.execute(select(ReceivableInvoice).where(ReceivableInvoice.id == target_inv_id))).scalar_one_or_none()
+            if inv:
+                return {
+                    "query": query,
+                    "summary": f"B2B Receivable Invoice {inv.invoice_number} ({inv.id})",
+                    "observed_data": f"Amount Due: ₹{inv.invoice_amount:,.2f} | Overdue: {inv.overdue_days} days | Stage: {inv.chasing_stage} | Contacts: {inv.contact_count}",
+                    "ai_recommendation": "Dynamic chasing workflow with stakeholder-specific tone and payment link generation.",
+                    "policy_decision": "High-value B2B policy: Invoices requiring Executive Escalation require Merchant Admin review.",
+                    "final_outcome": f"Status: {inv.status} (Last contacted: {inv.last_contact_at or 'Pending initial chase'}).",
+                    "references": [inv.id]
+                }
+        if target_man_id:
+            man = (await db.execute(select(Mandate).where(Mandate.id == target_man_id))).scalar_one_or_none()
+            if man:
+                return {
+                    "query": query,
+                    "summary": f"Mandate {man.id} ({man.mandate_type})",
+                    "observed_data": f"Scheduled Amount: ₹{man.scheduled_amount:,.2f} | Frequency: {man.frequency} | Retries: {man.attempt_number}/{man.max_attempts} | Status: {man.status}",
+                    "ai_recommendation": "Debit retry sequencer predicting high-liquidity clearing windows.",
+                    "policy_decision": "RBI Compliance Guardrail: Maximum 3 retry attempts hard cap.",
+                    "final_outcome": f"Next retry attempt: {man.next_attempt_at or 'Sequenced'}",
+                    "references": [man.id]
+                }
+        if target_voc_id:
+            voc = (await db.execute(select(VoiceRecoverySession).where(VoiceRecoverySession.id == target_voc_id))).scalar_one_or_none()
+            if voc:
+                return {
+                    "query": query,
+                    "summary": f"Hinglish Voice Recovery Session {voc.id} ({voc.phone_number})",
+                    "observed_data": f"Language: {voc.language} | Status: {voc.call_status} | Intent: {voc.detected_intent} | Duration: {voc.duration_seconds}s",
+                    "ai_recommendation": f"Generated Script: {voc.generated_script[:80]}...",
+                    "policy_decision": "TRAI Calling Window Compliance: Outbound voice calls strictly constrained to 9:00 AM - 8:00 PM IST.",
+                    "final_outcome": f"Call Status: {voc.call_status} (Link Sent: {voc.payment_link_sent})",
+                    "references": [voc.id]
+                }
+        if target_ptp_id:
+            ptp = (await db.execute(select(PromiseToPay).where(PromiseToPay.id == target_ptp_id))).scalar_one_or_none()
+            if ptp:
+                return {
+                    "query": query,
+                    "summary": f"Promise-to-Pay {ptp.id} (Ref: {ptp.reference_id})",
+                    "observed_data": f"Promised Amount: ₹{ptp.promised_amount:,.2f} | Promised Date: {ptp.promised_date} | Status: {ptp.status} | Reminders Sent: {ptp.reminder_sent_count}",
+                    "ai_recommendation": f"SLA tracking with {ptp.grace_period_hours}h grace period window.",
+                    "policy_decision": "PTP Policy: SLA breach triggers automatic escalation and credibility downgrade.",
+                    "final_outcome": f"Status is {ptp.status} (Fulfilled: {ptp.fulfilled_at or 'Pending'}).",
+                    "references": [ptp.id]
+                }
 
         # 2. Check for Specific Transaction / Workflow Queries
         if target_txn_id or target_wf_id:
@@ -170,12 +262,24 @@ class OperationsAssistant:
                 "references": ["txn_demo_27000"]
             }
 
-        # 6. Default Grounded Guidance
+        # 6. Recovery Programs Inquiries
+        if any(w in query_lower for w in ["program", "capabilities", "modules", "suite", "expansion"]):
+            return {
+                "query": query,
+                "summary": "RecoverAI 7-Program Revenue Recovery Architecture",
+                "observed_data": "Seven specialized pipelines active: 1. Payment Degradation Recovery, 2. Checkout Drop-off Recovery, 3. Failed-Subscription Dunning, 4. B2B Receivables Chaser, 5. Mandate Retry Sequencer, 6. Hinglish Voice Recovery, 7. Promise-to-Pay (PTP) Tracker.",
+                "ai_recommendation": "All 7 programs utilize specialized AI reasoning with bounded deterministic guardrails.",
+                "policy_decision": "Deterministic rules enforce RBI caps (mandates), TRAI hours (voice), 24h subscription cooldowns, and credit score breach escalations.",
+                "final_outcome": "Unified audit logging and SSE telemetry across all 7 operational programs.",
+                "references": ["programs"]
+            }
+
+        # 7. Default Grounded Guidance
         return {
             "query": query,
             "summary": "RecoverAI Operations Intelligence Assistant",
-            "observed_data": "I am connected to the live RecoverAI SQLite database and deterministic Policy Engine.",
-            "ai_recommendation": "Ask me about specific transactions (e.g. 'What happened to txn_demo_4999?'), recovery metrics ('How much revenue is recovered?'), or merchant policies.",
+            "observed_data": "I am connected to the live RecoverAI database and deterministic Policy Engine across all 7 recovery programs.",
+            "ai_recommendation": "Ask me about specific transactions, subscriptions, invoices, mandates, voice sessions, PTP commitments, recovery metrics, or merchant policies.",
             "policy_decision": "Bounded Autonomy rule: AI Recommends • Policy Decides • Risk Constrains • Execution is Bounded • Audit Records Everything.",
             "final_outcome": "All answers are strictly grounded in active records without hallucination.",
             "references": []

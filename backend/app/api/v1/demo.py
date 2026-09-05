@@ -16,6 +16,12 @@ from app.models.recovery_workflow import RecoveryWorkflow
 from app.models.audit_log import AuditLog
 from app.models.webhook_event import WebhookEvent
 from app.models.user import User
+from app.models.checkout_session import CheckoutSession
+from app.models.subscription import Subscription
+from app.models.receivable_invoice import ReceivableInvoice
+from app.models.mandate import Mandate
+from app.models.promise_to_pay import PromiseToPay
+from app.models.voice_session import VoiceRecoverySession
 from app.core.auth import hash_password
 from app.core.enums import (
     PaymentStatus,
@@ -63,6 +69,12 @@ async def reset_demo_database(db: AsyncSession = Depends(get_db)):
     await db.execute(delete(WebhookEvent))
     await db.execute(delete(RecoveryWorkflow))
     await db.execute(delete(Transaction))
+    await db.execute(delete(CheckoutSession))
+    await db.execute(delete(Subscription))
+    await db.execute(delete(ReceivableInvoice))
+    await db.execute(delete(Mandate))
+    await db.execute(delete(PromiseToPay))
+    await db.execute(delete(VoiceRecoverySession))
     await db.execute(delete(Customer))
     await db.execute(delete(User))
     await db.execute(delete(Merchant))
@@ -210,6 +222,143 @@ async def perform_seed(db: AsyncSession):
                     "summary": f"Ingested payment failure {t['id']} (INR {t['amount']:,.2f}) - {t['reason']}"
                 }
             )
+
+    # 1. Seed Checkout Sessions
+    checkout_data = [
+        {"id": "chk_demo_8200", "cust_id": "cust_priya", "cart_val": 8200.0, "step": "PAYMENT_STEP", "friction": "GATEWAY_TIMEOUT", "items": 3},
+        {"id": "chk_demo_3400", "cust_id": "cust_aarav", "cart_val": 3400.0, "step": "ADDRESS_STEP", "friction": "COUPON_FAILURE", "items": 2},
+        {"id": "chk_demo_18500", "cust_id": "cust_vikram", "cart_val": 18500.0, "step": "CART", "friction": "HIGH_CART_HESITATION", "items": 5}
+    ]
+    for chk in checkout_data:
+        c_res = await db.execute(select(CheckoutSession).where(CheckoutSession.id == chk["id"]))
+        if not c_res.scalar_one_or_none():
+            c_sess = CheckoutSession(
+                id=chk["id"],
+                merchant_id=merchant.id,
+                customer_id=chk["cust_id"],
+                cart_value=chk["cart_val"],
+                exit_step=chk["step"],
+                detected_friction=chk["friction"],
+                items_count=chk["items"],
+                recovery_status="ABANDONED"
+            )
+            db.add(c_sess)
+
+    # 2. Seed Subscriptions
+    subscription_data = [
+        {"id": "sub_demo_corp_01", "cust_id": "cust_ananya", "plan_id": "plan_corp_annual", "plan_name": "Enterprise Pro Plan", "amount": 14999.0, "interval": "yearly", "fails": 1},
+        {"id": "sub_demo_team_02", "cust_id": "cust_aarav", "plan_id": "plan_team_monthly", "plan_name": "Team Growth Tier", "amount": 2999.0, "interval": "monthly", "fails": 2},
+        {"id": "sub_demo_starter_03", "cust_id": "cust_priya", "plan_id": "plan_start_monthly", "plan_name": "Starter Cloud Monthly", "amount": 999.0, "interval": "monthly", "fails": 1}
+    ]
+    for sub in subscription_data:
+        s_res = await db.execute(select(Subscription).where(Subscription.id == sub["id"]))
+        if not s_res.scalar_one_or_none():
+            s_obj = Subscription(
+                id=sub["id"],
+                merchant_id=merchant.id,
+                customer_id=sub["cust_id"],
+                plan_id=sub["plan_id"],
+                plan_name=sub["plan_name"],
+                recurring_amount=sub["amount"],
+                billing_interval=sub["interval"],
+                status="PAST_DUE",
+                failed_attempts=sub["fails"],
+                max_retries=3,
+                last_failure_reason="Card expired or insufficient balance",
+                cooldown_hours=24
+            )
+            db.add(s_obj)
+
+    # 3. Seed B2B Receivables
+    receivables_data = [
+        {"id": "inv_demo_corp_99", "cust_id": "cust_vikram", "inv_num": "INV-2026-9921", "amount": 185000.0, "aging": 45, "stage": "EXECUTIVE_ESCALATION"},
+        {"id": "inv_demo_tech_44", "cust_id": "cust_aarav", "inv_num": "INV-2026-4410", "amount": 72500.0, "aging": 22, "stage": "FORMAL_FOLLOWUP"},
+        {"id": "inv_demo_retail_12", "cust_id": "cust_priya", "inv_num": "INV-2026-1205", "amount": 34000.0, "aging": 10, "stage": "GENTLE_REMINDER"}
+    ]
+    for inv in receivables_data:
+        i_res = await db.execute(select(ReceivableInvoice).where(ReceivableInvoice.id == inv["id"]))
+        if not i_res.scalar_one_or_none():
+            i_obj = ReceivableInvoice(
+                id=inv["id"],
+                merchant_id=merchant.id,
+                customer_id=inv["cust_id"],
+                invoice_number=inv["inv_num"],
+                invoice_amount=inv["amount"],
+                due_date=datetime.now(timezone.utc),
+                overdue_days=inv["aging"],
+                chasing_stage=inv["stage"],
+                status="OUTSTANDING",
+                contact_count=1
+            )
+            db.add(i_obj)
+
+    # 4. Seed Mandates
+    mandates_data = [
+        {"id": "man_demo_upi_01", "cust_id": "cust_ananya", "token": "tok_upi_mandate_01", "type": "UPI_AUTOPAY", "max_amt": 15000.0, "sched": 12500.0, "freq": "MONTHLY", "attempt": 1},
+        {"id": "man_demo_enach_02", "cust_id": "cust_aarav", "token": "tok_enach_mandate_02", "type": "E_MANDATE", "max_amt": 50000.0, "sched": 4999.0, "freq": "MONTHLY", "attempt": 2},
+        {"id": "man_demo_card_03", "cust_id": "cust_priya", "token": "tok_card_mandate_03", "type": "NACH", "max_amt": 10000.0, "sched": 8499.0, "freq": "MONTHLY", "attempt": 1}
+    ]
+    for man in mandates_data:
+        m_res = await db.execute(select(Mandate).where(Mandate.id == man["id"]))
+        if not m_res.scalar_one_or_none():
+            m_obj = Mandate(
+                id=man["id"],
+                merchant_id=merchant.id,
+                customer_id=man["cust_id"],
+                mandate_token=man["token"],
+                mandate_type=man["type"],
+                max_amount=man["max_amt"],
+                scheduled_amount=man["sched"],
+                frequency=man["freq"],
+                status="SEQUENCED",
+                attempt_number=man["attempt"],
+                max_attempts=3,
+                failure_code="ISSUER_CLEARING_UNAVAILABLE"
+            )
+            db.add(m_obj)
+
+    # 5. Seed Hinglish Voice Recovery Sessions
+    voice_data = [
+        {"id": "voc_demo_ncr_01", "cust_id": "cust_vikram", "phone": "+919988776655", "lang": "HINGLISH", "script": "Namaste Vikram ji, RecoverAI finance desk se call hai regarding invoice #INV-2026-9921."},
+        {"id": "voc_demo_mum_02", "cust_id": "cust_aarav", "phone": "+919876543210", "lang": "HINGLISH", "script": "Hello Aarav ji, aapka Rs. 4,999 auto-debit skip ho gaya tha bank technical issue se."}
+    ]
+    for voc in voice_data:
+        v_res = await db.execute(select(VoiceRecoverySession).where(VoiceRecoverySession.id == voc["id"]))
+        if not v_res.scalar_one_or_none():
+            v_obj = VoiceRecoverySession(
+                id=voc["id"],
+                merchant_id=merchant.id,
+                customer_id=voc["cust_id"],
+                phone_number=voc["phone"],
+                language=voc["lang"],
+                generated_script=voc["script"],
+                call_status="SIMULATED_READY",
+                detected_intent="AGREED_TO_RETRY",
+                duration_seconds=45,
+                execution_mode="SIMULATED"
+            )
+            db.add(v_obj)
+
+    # 6. Seed Promise to Pay (PTP)
+    ptp_data = [
+        {"id": "ptp_demo_4401", "cust_id": "cust_aarav", "ref_type": "INVOICE", "ref_id": "inv_demo_tech_44", "amount": 72500.0, "status": "ACTIVE"},
+        {"id": "ptp_demo_8202", "cust_id": "cust_priya", "ref_type": "CHECKOUT", "ref_id": "chk_demo_8200", "amount": 8200.0, "status": "ACTIVE"}
+    ]
+    for ptp in ptp_data:
+        p_res = await db.execute(select(PromiseToPay).where(PromiseToPay.id == ptp["id"]))
+        if not p_res.scalar_one_or_none():
+            p_obj = PromiseToPay(
+                id=ptp["id"],
+                merchant_id=merchant.id,
+                customer_id=ptp["cust_id"],
+                reference_type=ptp["ref_type"],
+                reference_id=ptp["ref_id"],
+                promised_amount=ptp["amount"],
+                promised_date=datetime.now(timezone.utc),
+                grace_period_hours=24,
+                status=ptp["status"]
+            )
+            db.add(p_obj)
 
     await db.commit()
     return {"status": "success", "message": "Demo data successfully seeded"}

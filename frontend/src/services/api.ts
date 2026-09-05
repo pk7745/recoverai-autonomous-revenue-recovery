@@ -205,6 +205,120 @@ export const api = {
     const res = await fetch(`${API_BASE}/events/history`, { headers: getAuthHeaders() })
     if (!res.ok) throw new Error('Failed to fetch notification history')
     return res.json()
+  },
+
+  // 7-Program Suite Endpoints
+  async getProgramsOverview(): Promise<import('../types').ProgramsOverviewResponse> {
+    const res = await fetch(`${API_BASE}/programs/overview`, { headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to fetch programs overview')
+    return res.json()
+  },
+
+  // Checkout Drop-off
+  async getCheckoutSessions(): Promise<import('../types').CheckoutSessionItem[]> {
+    const res = await fetch(`${API_BASE}/programs/checkout`, { headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to fetch checkout sessions')
+    return res.json()
+  },
+  async planCheckout(sessionId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/checkout/${sessionId}/plan`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to plan checkout recovery')
+    return res.json()
+  },
+  async executeCheckout(sessionId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/checkout/${sessionId}/execute`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to execute checkout recovery')
+    return res.json()
+  },
+
+  // Subscriptions
+  async getSubscriptions(): Promise<import('../types').SubscriptionItem[]> {
+    const res = await fetch(`${API_BASE}/programs/subscriptions`, { headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to fetch subscriptions')
+    return res.json()
+  },
+  async planSubscription(subId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/subscriptions/${subId}/plan`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to plan subscription recovery')
+    return res.json()
+  },
+  async executeSubscription(subId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/subscriptions/${subId}/execute`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to execute subscription recovery')
+    return res.json()
+  },
+
+  // Receivables
+  async getReceivables(): Promise<import('../types').ReceivableInvoiceItem[]> {
+    const res = await fetch(`${API_BASE}/programs/receivables`, { headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to fetch receivable invoices')
+    return res.json()
+  },
+  async planReceivable(invoiceId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/receivables/${invoiceId}/plan`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to plan receivable chasing')
+    return res.json()
+  },
+  async executeReceivable(invoiceId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/receivables/${invoiceId}/execute`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to execute receivable chasing')
+    return res.json()
+  },
+
+  // Mandates
+  async getMandates(): Promise<import('../types').MandateItem[]> {
+    const res = await fetch(`${API_BASE}/programs/mandates`, { headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to fetch mandates')
+    return res.json()
+  },
+  async planMandate(mandateId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/mandates/${mandateId}/plan`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to plan mandate sequence')
+    return res.json()
+  },
+  async executeMandate(mandateId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/mandates/${mandateId}/execute`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to execute mandate sequence')
+    return res.json()
+  },
+
+  // Voice Sessions
+  async getVoiceSessions(): Promise<import('../types').VoiceRecoverySessionItem[]> {
+    const res = await fetch(`${API_BASE}/programs/voice`, { headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to fetch voice sessions')
+    return res.json()
+  },
+  async planVoice(sessionId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/voice/${sessionId}/plan`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to plan voice recovery')
+    return res.json()
+  },
+  async executeVoice(sessionId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/voice/${sessionId}/execute`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to execute voice recovery')
+    return res.json()
+  },
+
+  // Promises to Pay
+  async getPromisesToPay(): Promise<import('../types').PromiseToPayItem[]> {
+    const res = await fetch(`${API_BASE}/programs/promises`, { headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to fetch promises to pay')
+    return res.json()
+  },
+  async planPromise(ptpId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/promises/${ptpId}/plan`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to plan promise to pay')
+    return res.json()
+  },
+  async fulfillPromise(ptpId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/promises/${ptpId}/fulfill`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to fulfill promise to pay')
+    return res.json()
+  },
+  async breachPromise(ptpId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/programs/promises/${ptpId}/breach`, { method: 'POST', headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to breach promise to pay')
+    return res.json()
   }
 }
 

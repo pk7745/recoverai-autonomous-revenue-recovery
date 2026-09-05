@@ -292,3 +292,135 @@ export type DashboardOverview = DashboardOverviewResponse
 export type SafetyOverview = SafetyOverviewResponse
 export type MerchantPolicy = MerchantPolicyResponse
 export type AuditLog = AuditLogItem
+
+// 7-Program Suite Types
+export interface ProgramSummary {
+  name: string
+  total_records: number
+  active_workflows: number
+  recovered_amount: number
+  status: string
+}
+
+export interface ProgramsOverviewResponse {
+  programs: {
+    payment: ProgramSummary
+    checkout: ProgramSummary
+    subscription: ProgramSummary
+    receivables: ProgramSummary
+    mandates: ProgramSummary
+    voice: ProgramSummary
+    promises: ProgramSummary
+  }
+  total_active_pipelines: number
+  total_recovered_inr: number
+}
+
+export interface CheckoutSessionItem {
+  id: string
+  customer_id: string
+  customer_name: string
+  customer_email: string
+  cart_value: number
+  currency: string
+  items_count: number
+  exit_step: string
+  detected_friction: string
+  recovery_status: string
+  recovery_link_url?: string
+  created_at: string
+  workflow?: Partial<RecoveryWorkflow>
+}
+
+export interface SubscriptionItem {
+  id: string
+  customer_id: string
+  customer_name: string
+  customer_email: string
+  plan_name: string
+  recurring_amount: number
+  currency: string
+  billing_interval: string
+  status: string
+  failed_attempts: number
+  max_retries: number
+  last_failure_reason?: string
+  next_retry_at?: string
+  created_at: string
+  workflow?: Partial<RecoveryWorkflow>
+}
+
+export interface ReceivableInvoiceItem {
+  id: string
+  invoice_number: string
+  customer_id: string
+  customer_name: string
+  customer_email: string
+  invoice_amount: number
+  currency: string
+  issue_date: string
+  due_date: string
+  overdue_days: number
+  chasing_stage: string
+  status: string
+  last_contact_at?: string
+  contact_count: number
+  created_at: string
+  workflow?: Partial<RecoveryWorkflow>
+}
+
+export interface MandateItem {
+  id: string
+  customer_id: string
+  customer_name: string
+  mandate_token: string
+  mandate_type: string
+  max_amount: number
+  scheduled_amount: number
+  currency: string
+  frequency: string
+  status: string
+  attempt_number: number
+  max_attempts: number
+  failure_code: string
+  next_attempt_at?: string
+  created_at: string
+  workflow?: Partial<RecoveryWorkflow>
+}
+
+export interface VoiceRecoverySessionItem {
+  id: string
+  customer_id: string
+  customer_name: string
+  phone_number: string
+  language: string
+  generated_script: string
+  audio_simulation_state?: Record<string, any>
+  call_status: string
+  detected_intent: string
+  payment_link_sent: boolean
+  duration_seconds: number
+  execution_mode: string
+  created_at: string
+  workflow?: Partial<RecoveryWorkflow>
+}
+
+export interface PromiseToPayItem {
+  id: string
+  customer_id: string
+  customer_name: string
+  reference_type: string
+  reference_id: string
+  promised_amount: number
+  currency: string
+  promised_date: string
+  grace_period_hours: number
+  status: string
+  reminder_sent_count: number
+  notes?: string
+  fulfilled_at?: string
+  breached_at?: string
+  created_at: string
+  workflow?: Partial<RecoveryWorkflow>
+}
+

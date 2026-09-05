@@ -2,6 +2,7 @@ import React from 'react'
 import {
   LayoutDashboard,
   GitPullRequest,
+  Layers,
   ShieldAlert,
   FlaskConical,
   ScrollText,
@@ -10,7 +11,7 @@ import {
   ShieldCheck
 } from 'lucide-react'
 
-export type TabId = 'overview' | 'queue' | 'safety' | 'experiments' | 'audit' | 'policies' | 'demo'
+export type TabId = 'overview' | 'programs' | 'queue' | 'safety' | 'experiments' | 'audit' | 'policies' | 'demo'
 
 interface NavItem {
   id: TabId
@@ -37,6 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab, escal
       group: 'OPERATIONS',
       items: [
         { id: 'overview', label: 'Command Center', icon: LayoutDashboard },
+        { id: 'programs', label: 'Recovery Programs', icon: Layers },
         { id: 'queue', label: 'Recovery Queue', icon: GitPullRequest, badge: escalationCount > 0 ? escalationCount : undefined }
       ]
     },
