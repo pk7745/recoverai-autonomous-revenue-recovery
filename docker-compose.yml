@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=sqlite+aiosqlite:///./recoverai.db
+      - RAZORPAY_KEY_ID=rzp_test_recoverai2026
+      - RAZORPAY_KEY_SECRET=sec_recoverai_test_secret_key_2026
+      - RAZORPAY_WEBHOOK_SECRET=whsec_recoverai_super_secret_webhook_2026
+    volumes:
+      - ./backend/recoverai.db:/app/recoverai.db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
