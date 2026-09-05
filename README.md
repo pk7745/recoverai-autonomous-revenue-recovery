@@ -1,119 +1,192 @@
 # RecoverAI — Autonomous AI Revenue Recovery Platform
 
-> **Recover revenue before it becomes lost revenue.**  
-> Built for **Razorpay AI Builder Buildathon 2026 — Track 03: AI Revenue Recovery**
+> **"AI Recommends. Policy Decides. Risk Constrains. Execution is Bounded. Audit Records Everything."**  
+> Built for the **Razorpay AI Builder Buildathon 2026 — Track 03: AI Revenue Recovery**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=black)](https://reactjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![asyncpg](https://img.shields.io/badge/Driver-asyncpg-2C3E50?logo=python&logoColor=white)](https://magicstack.github.io/asyncpg/)
 [![Razorpay Test Mode](https://img.shields.io/badge/Razorpay-Test%20Mode-0C2340?logo=razorpay&logoColor=white)](https://razorpay.com/docs/)
-[![Pytest](https://img.shields.io/badge/Tests-19%20Passing%20(100%25)-4E9A06?logo=pytest&logoColor=white)](https://pytest.org)
+[![Pytest](https://img.shields.io/badge/Tests-24%20Passing%20(100%25)-4E9A06?logo=pytest&logoColor=white)](https://pytest.org)
 
 ---
 
-## 1. Product Overview & The Problem
+## 1. Executive Summary & Problem Statement
 
-When Razorpay merchant payments fail, merchants lose **15% to 25% of top-line revenue**. Traditional payment systems suffer from two fatal extremes:
-1. **Do Nothing:** The payment failure is treated as final; cart abandonment occurs, customer churns.
-2. **Blind "Retry Everything" Bots:** Naive scripts retry every failed transaction blindly, causing card network penalties, bank fraud flags, chargeback spikes, and angry customers receiving duplicate charges.
+When merchant payments fail on payment gateways, Indian online merchants lose **15% to 25% of top-line GMV**. Existing recovery approaches suffer from two fatal extremes:
 
-**RecoverAI** replaces naive retry scripts with an **autonomous, policy-bounded revenue recovery loop**:
-```
-EVENT ──► DETECT ──► DIAGNOSE ──► DECIDE ──► POLICY CHECK ──► EXECUTE ──► VERIFY ──► MEASURE ──► AUDIT
-```
+1. **Passive Inaction:** The failure is treated as terminal; the cart is abandoned, and the customer churns.
+2. **Blind Retry Scripts ("Spam Bots"):** Naive cron scripts retry every failed payment immediately and identically, triggering bank card flags, payment gateway rate limits, chargeback spikes, customer harassment, and double charges.
 
----
-
-## 2. Key Architecture & Bounded Autonomy
-
-Under **no circumstance** is an AI/LLM allowed to directly call gateway execution endpoints without guardrails. 
+**RecoverAI** replaces naive retry scripts with an **autonomous, policy-bounded revenue recovery engine**. It detects failures in real-time, diagnoses root causes via factor synthesis, recommends intelligent interventions, subjects every action to deterministic merchant policy gates, executes bounded operations, and records tamper-evident audit trails.
 
 ```
-+-------------------------------------------------------------------------------+
-|                             RECOVERAI ORCHESTRATION LAYER                     |
-|                                                                               |
-|   1. Payment Failure Webhook (HMAC-SHA256 Verified, Idempotent)               |
-|      │                                                                        |
-|   2. Revenue Risk Detection Engine (Analyzes amount, customer credibility)    |
-|      │                                                                        |
-|   3. AI Diagnostic Agent (Selects bounded tools, outputs explainable factors) |
-|      │                                                                        |
-|   4. Deterministic Merchant Policy Engine (Hard caps: ₹5,000 auto limit,      |
-|      │                                    Max 2 retries, cooldown periods)    |
-|      ├───────────────────────────────────┐                                    |
-|      ▼ [Within Limits]                   ▼ [Violates Policy / High Risk]      |
-|   5. Razorpay Test Mode Execution     5. Route to Human Escalation Queue      |
-|      (Smart Links, Delayed Retry)        (Manual Finance Manager Sign-off)    |
-|      │                                                                        |
-|   6. Asynchronous Webhook Settlement (payment.captured / payment.authorized)  |
-|      │                                                                        |
-|   7. Immutable Cryptographic Audit Ledger & Real-Time Telemetry               |
-+-------------------------------------------------------------------------------+
+EVENT ──► EVIDENCE ──► DIAGNOSIS ──► RECOMMENDATION ──► RISK CHECK ──► POLICY GATE ──► BOUNDED EXECUTION ──► AUDIT LEDGER
 ```
 
 ---
 
-## 3. Empirical 10,000+ Transaction Benchmark
+## 2. Core Architecture & Bounded Autonomy
 
-To prove real financial impact without fabricating metrics, RecoverAI includes a reproducible statistical simulator evaluated against **10,000 realistic synthetic payments** (deterministic seed 42) across authentic failure distributions:
+Under **no circumstance** is an AI agent permitted to execute financial mutations directly. The system enforces strict architectural layers:
 
-| Evaluation Metric | Static Single Retry (Baseline) | RecoverAI (Bounded Agentic) | Measured Impact |
+```
+                            [ Merchant Operator / Admin ]
+                                         │
+                 ┌───────────────────────┴───────────────────────┐
+                 │       React 18 + TypeScript Console           │
+                 │  • Real-Time SSE Notification Center          │
+                 │  • Grounded 4-Layer Operations Assistant      │
+                 │  • RBAC Guardrail Policy Control Plane        │
+                 └───────────────────────┬───────────────────────┘
+                                         │ HTTP / Bearer JWT
+                                         ▼
+                 ┌───────────────────────────────────────────────┐
+                 │             FastAPI Ingress Layer             │
+                 │  • Backend RBAC Authorization (Admin vs Agent)│
+                 │  • HMAC-SHA256 Webhook Verification           │
+                 │  • SHA-256 Idempotency Ingress Gate           │
+                 └───────────────────────┬───────────────────────┘
+                                         │
+        ┌────────────────────────────────┼────────────────────────────────┐
+        │                                │                                │
+        ▼                                ▼                                ▼
+┌─────────────────┐            ┌───────────────────┐            ┌───────────────────┐
+│ AI Diagnostic   │            │ Deterministic     │            │ Risk Engine       │
+│ Agent           │ ─────────► │ Policy Engine     │ ─────────► │ Factor Scoring    │
+│ (Root Cause)    │            │ (Hard Boundaries) │            │ (Fraud Velocity)  │
+└─────────────────┘            └───────────────────┘            └───────────────────┘
+                                         │
+                                         ▼
+                 ┌───────────────────────────────────────────────┐
+                 │        9-State Recovery State Machine         │
+                 │        Scoped Razorpay Client Executor        │
+                 │        Tamper-Evident Audit Ledger            │
+                 └───────────────────────┬───────────────────────┘
+                                         │ SQLAlchemy 2.0 Async
+                                         ▼
+                 ┌───────────────────────────────────────────────┐
+                 │        Persistent Database Storage            │
+                 │   Dev: SQLite 3 (aiosqlite)                   │
+                 │   Prod: PostgreSQL 16 (asyncpg)               │
+                 └───────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Subsystems & Key Capabilities
+
+### 1. 9-State Recovery State Machine
+Enforces strict legal state transitions:
+`PAYMENT_FAILED` $\rightarrow$ `RECOVERY_ELIGIBLE` $\rightarrow$ `RECOVERY_PLANNED` $\rightarrow$ `POLICY_APPROVED` $\rightarrow$ `ACTION_EXECUTING` $\rightarrow$ `AWAITING_PAYMENT_EVENT` $\rightarrow$ `RECOVERED` / `ESCALATED` / `STOPPED`.
+
+### 2. Deterministic Merchant Policy Engine
+Server-side authoritative rules that cannot be overridden by AI reasoning:
+- **Autonomous Ceiling:** Automated interventions capped at ₹5,000.00 (higher amounts routed to Human Review).
+- **Max Retry Limit:** Hard cap of 2 retry attempts per transaction (attempt 3 triggers `STOPPED`).
+- **Fraud Anomaly Threshold:** Risk score $\ge 0.70$ immediately halts autonomous actions.
+- **Cooldown Interval:** Enforces minimum 30-minute delays for issuer declines.
+
+### 3. Gateway Security & Idempotency Gate
+- **HMAC-SHA256 Verification:** Constant-time `hmac.compare_digest` validation of gateway webhook signatures.
+- **SHA-256 Payload Deduplication:** Hashes webhook bodies and indexes event IDs to drop duplicate network replays with zero financial mutation.
+
+### 4. Real-Time SSE Notification Center
+Streams live gateway and recovery events directly to the browser over Server-Sent Events (`/api/v1/events/stream`), eliminating polling while displaying severity badges, timestamps, and transaction links.
+
+### 5. Grounded Operations Assistant
+Context-aware conversational assistant grounded in SQL records (`Transaction`, `RecoveryWorkflow`, `Customer`, `AuditLog`, `MetricsService`). Strictly outputs 4 distinct layers:
+- **Observed Data:** Raw gateway facts, amount, and customer profile.
+- **AI Recommendation:** Suggested recovery strategy and confidence score.
+- **Policy Decision:** Deterministic rules evaluated and whether execution was authorized or blocked.
+- **Final Outcome:** Settled financial amount or human escalation status (honest *"No record found"* on unknown IDs).
+
+### 6. Backend-Authoritative RBAC
+- **`MERCHANT_ADMIN`:** Full control; can modify guardrail policies via `PUT /api/v1/policies` (HTTP 200).
+- **`OPERATIONS_AGENT`:** Operations monitoring and case review; policy modifications are blocked on the backend with **HTTP 403 Forbidden**.
+
+### 7. Tamper-Evident Audit Ledger
+Chronological, append-only log capturing actor, action, timestamp, and structured payload for every transition.
+
+---
+
+## 4. Empirical 10,000-Transaction Benchmark
+
+RecoverAI includes a statistical benchmark evaluated against **10,000 synthetic Indian merchant payment failures** (deterministic seed 42) across authentic failure distributions:
+
+| Metric | Static Single Retry (Baseline) | RecoverAI (Bounded Agentic) | Measured Impact |
+|---|:---:|:---:|:---:|
+| **Recovery Rate** | **28.31%** | **64.29%** | **+35.98 pp (Net Lift)** |
+| **Total Recovered Revenue** | ₹1,62,75,056.05 | ₹3,69,60,073.06 | **+₹2,06,85,017.01 Incremental GMV** |
+| **Wasteful / Failed Retries** | 6,550 | 332 | **6,218 Retries Prevented** |
+| **Human Escalations Routed** | 0 (Unchecked) | 2,500 | **100% High-Risk Protected** |
+| **Unsafe Actions Blocked** | 0 | 1,689 | **100% Contained (Fraud & Max-Retry)** |
+
+---
+
+## 5. The 5 Deterministic Demo Lab Scenarios
+
+Evaluators can execute all 5 scenarios with 1-click reproducibility in the **Demo Lab**:
+
+```
+┌────────────┬───────────────────────────────────────┬──────────────┬──────────────────────────────────────────────────────┐
+│ Scenario   │ Trigger & Condition                   │ Final State  │ Financial Outcome                                    │
+├────────────┼───────────────────────────────────────┼──────────────┼──────────────────────────────────────────────────────┤
+│ Scenario 1 │ ₹4,999 Temporary Bank Decline         │ RECOVERED    │ ₹4,999.00 Settled (Delayed retry executed & captured)│
+│ Scenario 2 │ ₹27,000 High Risk / Suspicious Fraud  │ ESCALATED    │ ₹0 Recovered • ₹27,000 Held for Human Review         │
+│ Scenario 3 │ ₹3,200 Max Retry Breached (Attempt 3) │ STOPPED      │ ₹0 Recovered • Stopped (Max Attempts Limit Enforced) │
+│ Scenario 4 │ Replayed Webhook Event                │ IDEMPOTENT   │ Zero Financial Mutation (Duplicate Dropped)          │
+│ Scenario 5 │ Already Settled via Parallel Window   │ RECOVERED    │ Zero Duplicate Execution (Evaluated NO_ACTION)       │
+└────────────┴───────────────────────────────────────┴──────────────┴──────────────────────────────────────────────────────┘
+```
+
+---
+
+## 6. Seeded Demo Accounts
+
+| Role | Email | Password | Permissions |
 |---|---|---|---|
-| **Recovery Rate** | **28.31%** | **64.29%** | **+35.98 Percentage-Point Uplift** |
-| **Recovered Volume** | ₹1.63 Cr (₹1,62,75,056) | ₹3.70 Cr (₹3,69,60,073) | **+₹2.07 Cr Net Incremental GMV** |
-| **Wasteful / Unsafe Retries** | 6,550 | 332 | **6,218 Retries Prevented (89% Drop)** |
-| **Human Escalations Routed** | 0 (Blindly retried) | 2,500 High-Risk Checked | **100% High-Risk Safe** |
-| **Unsafe Actions Blocked** | 0 | 1,689 Blocked | **Zero Chargeback Risk** |
-| **Platform ROI Multiple** | 1.8x | **4.6x** | **+2.8x Net Merchant ROI** |
+| **Lead Merchant Admin** | `admin@acrobatics.com` | `RecoverAI2026!` | **Full Control:** Policy management, dual signoffs, execution |
+| **Operations Agent** | `ops@acrobatics.com` | `RecoverAI2026!` | **Read-Only:** Operations review (**Policy editing blocked with 403**) |
+
+*(1-Click quick-fill buttons are provided on the login page at `http://localhost:5173`.)*
 
 ---
 
-## 4. Deterministic Demo Scenarios
-
-Evaluators can test and verify all 5 core scenarios with 1-click execution in the built-in **Demo Lab**:
-
-1. **Scenario 1 — Successful Delayed Retry:** ₹4,999 temporary issuer decline + returning customer $\rightarrow$ AI schedules 30-min delayed retry $\rightarrow$ Policy allows $\rightarrow$ Webhook confirms settlement $\rightarrow$ Revenue recovered.
-2. **Scenario 2 — High-Risk Policy Block:** ₹27,000 high-value transaction + fraud risk score 0.85 $\rightarrow$ Policy engine blocks automated retry ($>\text{₹}5,000$ limit) $\rightarrow$ Escalates to Human Ops.
-3. **Scenario 3 — Max Attempts Stopping Rule:** Payment reaches 3rd failure attempt $\rightarrow$ Exceeds merchant max limit of 2 retries $\rightarrow$ Stopping rule halts workflow immediately.
-4. **Scenario 4 — Duplicate Webhook Idempotency:** Identical Razorpay webhook replayed twice $\rightarrow$ Deduped via SHA-256 hash $\rightarrow$ Second event rejected without duplicate mutation.
-5. **Scenario 5 — Already Recovered (DO NOTHING):** Payment already captured in parallel channel $\rightarrow$ Policy evaluates `NO_ACTION` $\rightarrow$ Aborts workflow to prevent double-charging.
-
----
-
-## 5. Technology Stack
-
-- **Backend:** Python 3.10+, FastAPI, SQLAlchemy 2.0 Async, SQLite/PostgreSQL, Pydantic v2, Pytest.
-- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons, Recharts.
-- **Payments:** Razorpay Test Mode API Client, HMAC-SHA256 signature verification, idempotent webhook engine.
-- **AI / Reasoning:** Pluggable `AIProvider` supporting offline deterministic expert engine + Google Gemini / OpenAI adapters.
-
----
-
-## 6. Quickstart & Local Setup
+## 7. Local Quickstart
 
 ### Prerequisites
 - Python 3.10+
 - Node.js v18+ & npm
 
-### 1. Start Backend
+### 1. Backend Setup
 ```bash
 cd backend
-.venv\Scripts\activate
-# Or create venv: python -m venv .venv && .venv\Scripts\pip install -r requirements.txt
-python -m uvicorn app.main:app --port 8000
-```
-- API Endpoint: `http://127.0.0.1:8000`
-- Interactive OpenAPI Docs: `http://127.0.0.1:8000/docs`
+python -m venv .venv
 
-### 2. Run Test Suite
+# On Windows:
+.venv\Scripts\activate
+# On macOS/Linux:
+source .venv/bin/activate
+
+pip install -r requirements.txt
+python -m uvicorn app.main:app --port 8000 --reload
+```
+- API Base: `http://127.0.0.1:8000`
+- Interactive Swagger Docs: `http://127.0.0.1:8000/docs`
+- Health Endpoint: `http://127.0.0.1:8000/health`
+
+### 2. Run Automated Regression Suite
 ```bash
 cd backend
 pytest -v
 ```
-*(All 19 unit & end-to-end integration tests pass in <1s)*
+*(All 24 unit, security, RBAC, benchmark, and integration tests pass in ~1.5s)*
 
-### 3. Start Frontend
+### 3. Frontend Setup
 ```bash
 cd frontend
 npm install
@@ -123,19 +196,48 @@ npm run dev
 
 ---
 
-## 7. Demo Reset & Verification Commands
+## 8. Production Render Deployment
 
-To reset the database to a fresh deterministic state at any time:
-```bash
-# Via API / Curl:
-curl -X POST http://127.0.0.1:8000/api/v1/demo/reset
+RecoverAI is configured for 1-click infrastructure provisioning on [Render](https://render.com) using [`render.yaml`](file:///C:/Users/pky45/.gemini/antigravity/scratch/recoverai/render.yaml).
 
-# Or inside UI:
-Click "Reset Demo Dataset" on the Demo Lab screen.
+### Architecture
+- **Web Service (Backend):** Python 3.11 + FastAPI (`uvicorn app.main:app --host 0.0.0.0 --port $PORT`)
+- **Managed Database:** PostgreSQL 16 with `asyncpg` async connection pooling
+- **Static Site (Frontend):** React 18 + Vite (`npm run build` $\rightarrow$ `./frontend/dist`)
+
+### Required Environment Variables
+
+#### Backend Web Service:
+```env
+ENVIRONMENT=production
+DATABASE_URL=postgresql+asyncpg://user:password@host:5432/recoverai?ssl=require
+JWT_SECRET_KEY=<your-secure-random-64-char-string>
+FRONTEND_URL=https://recoverai-frontend.onrender.com
+RAZORPAY_KEY_ID=rzp_test_recoverai2026
+RAZORPAY_KEY_SECRET=sec_recoverai_test_secret_key_2026
+RAZORPAY_WEBHOOK_SECRET=whsec_recoverai_super_secret_webhook_2026
+```
+
+#### Frontend Static Site:
+```env
+VITE_API_BASE_URL=https://recoverai-backend.onrender.com
 ```
 
 ---
 
-## 8. License
+## 9. Technology Stack
 
-MIT License. Designed & Developed for the **Razorpay AI Builder Buildathon 2026**.
+| Layer | Technologies |
+|---|---|
+| **Backend Core** | Python 3.10+, FastAPI, Pydantic v2, Uvicorn (ASGI) |
+| **Database & ORM** | SQLAlchemy 2.0 Async, aiosqlite (Dev), asyncpg (Prod PostgreSQL) |
+| **Frontend Console** | React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons |
+| **Security & Auth** | Salted PBKDF2 (100k rounds), HMAC-SHA256 JWT, Constant-Time Digest Verification |
+| **Gateway Integration**| Razorpay Test Mode API, HMAC-SHA256 Webhook Verification, SHA-256 Idempotency |
+| **Testing** | Pytest, Pytest-Asyncio, HTTPX |
+
+---
+
+## 10. License
+
+MIT License. Developed for the **Razorpay AI Builder Buildathon 2026**.
