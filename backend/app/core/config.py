@@ -82,9 +82,7 @@ class Settings(BaseSettings):
 
     def get_cors_origins(self) -> List[str]:
         """
-        Returns allowed CORS origins based on environment.
-        In production: restricts strictly to FRONTEND_URL and explicit CORS_ORIGINS.
-        In development/demo: includes localhost ports.
+        Returns allowed CORS origins based on configuration.
         """
         origins: List[str] = []
         if self.FRONTEND_URL:
@@ -95,19 +93,21 @@ class Settings(BaseSettings):
                 clean = item.strip().rstrip("/")
                 if clean and clean not in origins:
                     origins.append(clean)
-                    
-        if self.ENVIRONMENT != "production":
-            defaults = [
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "http://localhost:3000",
-                "http://127.0.0.1:3000",
-                "http://localhost:8000",
-                "http://127.0.0.1:8000"
-            ]
-            for d in defaults:
-                if d not in origins:
-                    origins.append(d)
+
+        # Default allowed origins (localhost dev ports & known Render deploy origins)
+        defaults = [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+            "https://recoverai-frontend-nl2e.onrender.com",
+            "https://recoverai-autonomous-revenue-recovery.onrender.com"
+        ]
+        for d in defaults:
+            if d not in origins:
+                origins.append(d)
                     
         return origins
 
