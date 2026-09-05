@@ -43,3 +43,32 @@ async def get_db():
             raise
         finally:
             await session.close()
+
+
+async def run_schema_migrations(async_engine):
+    """
+    Safely inspects existing tables in SQLite or PostgreSQL and adds any missing
+    columns that were introduced in recent schema updates without dropping existing data.
+    """
+    from sqlalchemy import inspect, text
+
+    def _apply_migrations(sync_conn):
+        inspector = inspect(sync_conn)
+        tables = set(inspector.get_table_names())
+
+        if "recovery_workflows" in tables:
+            cols = {c["name"] for c in inspector.get_columns("recovery_workflows")}
+            if "recovery_type" not in cols:
+                sync_conn.execute(text("ALTER TABLE recovery_workflows ADD COLUMN recovery_type VARCHAR(32) DEFAULT 'PAYMENT'"))
+            if "reference_id" not in cols:
+                sync_conn.execute(text("ALTER TABLE recovery_workflows ADD COLUMN reference_id VARCHAR(64)"))
+            if "execution_mode" not in cols:
+                sync_conn.execute(text("ALTER TABLE recovery_workflows ADD COLUMN execution_mode VARCHAR(32) DEFAULT 'SIMULATED'"))
+
+        if "users" in tables:
+            cols = {c["name"] for c in inspector.get_columns("users")}
+            if "role" not in cols:
+                sync_conn.execute(text("ALTER TABLE users ADD COLUMN role VARCHAR(32) DEFAULT 'OPERATIONS_AGENT'"))
+
+    async with async_engine.begin() as conn:
+        await conn.run_sync(_apply_migrations)

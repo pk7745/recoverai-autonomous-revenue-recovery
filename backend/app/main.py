@@ -7,7 +7,7 @@ import os
 import logging
 from sqlalchemy import select
 from app.core.config import settings
-from app.core.database import engine, Base, AsyncSessionLocal
+from app.core.database import engine, Base, AsyncSessionLocal, run_schema_migrations
 from app.models import Merchant, Customer, Transaction, RecoveryWorkflow, AuditLog, WebhookEvent, User
 from app.api.v1 import api_router
 from app.core.auth import ensure_initial_users
@@ -17,11 +17,12 @@ logger = logging.getLogger("recoverai.startup")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Initialize SQLite / PostgreSQL DB schema tables
+    # 1. Initialize SQLite / PostgreSQL DB schema tables & run auto-migrations
     logger.info("Initializing database schema tables...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database schema tables verified/created.")
+    await run_schema_migrations(engine)
+    logger.info("Database schema tables verified, migrated, and ready.")
     
     # 2. Guarantee baseline demo users exist with verified password hashes
     async with AsyncSessionLocal() as session:
