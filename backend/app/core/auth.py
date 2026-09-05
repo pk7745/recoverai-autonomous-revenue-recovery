@@ -31,6 +31,69 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     except Exception:
         return False
 
+async def ensure_initial_users(db: AsyncSession):
+    """
+    Idempotently ensures default merchant and demo users (MERCHANT_ADMIN and
+    OPERATIONS_AGENT) exist with properly hashed passwords.
+    """
+    from app.models.merchant import Merchant
+    
+    # 1. Ensure Merchant
+    stmt = select(Merchant).where(Merchant.id == "merch_razorpay_demo")
+    res = await db.execute(stmt)
+    merchant = res.scalar_one_or_none()
+    if not merchant:
+        merchant = Merchant(
+            id="merch_razorpay_demo",
+            name="Acrobatics Apparel Pvt Ltd",
+            api_key_id="rzp_test_recoverai2026",
+            webhook_secret="whsec_recoverai_super_secret_webhook_2026",
+            autonomous_limit=5000.0,
+            max_retries=2,
+            min_retry_interval_mins=30,
+            risk_threshold=0.70
+        )
+        db.add(merchant)
+        await db.flush()
+
+    # 2. Ensure Admin User
+    admin_stmt = select(User).where(User.email == "admin@acrobatics.com")
+    admin_res = await db.execute(admin_stmt)
+    admin_user = admin_res.scalar_one_or_none()
+    if not admin_user:
+        admin_user = User(
+            id="usr_admin",
+            merchant_id=merchant.id,
+            email="admin@acrobatics.com",
+            name="Vikramaditya (Lead Admin)",
+            hashed_password=hash_password("RecoverAI2026!"),
+            role="MERCHANT_ADMIN"
+        )
+        db.add(admin_user)
+    else:
+        admin_user.role = "MERCHANT_ADMIN"
+        admin_user.hashed_password = hash_password("RecoverAI2026!")
+
+    # 3. Ensure Ops User
+    ops_stmt = select(User).where(User.email == "ops@acrobatics.com")
+    ops_res = await db.execute(ops_stmt)
+    ops_user = ops_res.scalar_one_or_none()
+    if not ops_user:
+        ops_user = User(
+            id="usr_ops",
+            merchant_id=merchant.id,
+            email="ops@acrobatics.com",
+            name="Neha Sharma (Ops Agent)",
+            hashed_password=hash_password("RecoverAI2026!"),
+            role="OPERATIONS_AGENT"
+        )
+        db.add(ops_user)
+    else:
+        ops_user.role = "OPERATIONS_AGENT"
+        ops_user.hashed_password = hash_password("RecoverAI2026!")
+
+    await db.commit()
+
 def _b64url_encode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).decode("utf-8").rstrip("=")
 

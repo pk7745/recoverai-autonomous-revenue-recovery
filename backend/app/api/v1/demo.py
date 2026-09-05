@@ -83,26 +83,10 @@ async def seed_demo_database(db: AsyncSession = Depends(get_db)):
     return {"status": "success", "message": "Demo data successfully seeded"}
 
 async def perform_seed(db: AsyncSession):
-    merchant = await ensure_demo_merchant(db)
+    from app.core.auth import ensure_initial_users
+    await ensure_initial_users(db)
 
-    # Seed Authenticated Demo Users
-    admin_user = User(
-        id="usr_admin",
-        merchant_id=merchant.id,
-        email="admin@acrobatics.com",
-        name="Vikramaditya (Lead Admin)",
-        hashed_password=hash_password("RecoverAI2026!"),
-        role="MERCHANT_ADMIN"
-    )
-    ops_user = User(
-        id="usr_ops",
-        merchant_id=merchant.id,
-        email="ops@acrobatics.com",
-        name="Neha Sharma (Ops Agent)",
-        hashed_password=hash_password("RecoverAI2026!"),
-        role="OPERATIONS_AGENT"
-    )
-    db.add_all([admin_user, ops_user])
+    merchant = await ensure_demo_merchant(db)
 
     # Seed Customers
     customers_data = [
@@ -113,18 +97,20 @@ async def perform_seed(db: AsyncSession):
         {"id": "cust_rohit", "name": "Rohit Verma", "email": "rohit.verma@example.com", "phone": "+919123456789", "succ": 3, "fail": 1, "ret": True, "risk": "LOW"},
     ]
     for c in customers_data:
-        cust = Customer(
-            id=c["id"],
-            merchant_id=merchant.id,
-            name=c["name"],
-            email=c["email"],
-            phone=c["phone"],
-            total_successful_payments=c["succ"],
-            total_failed_payments=c["fail"],
-            is_returning=c["ret"],
-            risk_tier=c["risk"]
-        )
-        db.add(cust)
+        cust_res = await db.execute(select(Customer).where(Customer.id == c["id"]))
+        if not cust_res.scalar_one_or_none():
+            cust = Customer(
+                id=c["id"],
+                merchant_id=merchant.id,
+                name=c["name"],
+                email=c["email"],
+                phone=c["phone"],
+                total_successful_payments=c["succ"],
+                total_failed_payments=c["fail"],
+                is_returning=c["ret"],
+                risk_tier=c["risk"]
+            )
+            db.add(cust)
 
     # Seed Baseline Transactions & Recovery Workflows
     txns_data = [
@@ -179,49 +165,51 @@ async def perform_seed(db: AsyncSession):
     ]
 
     for t in txns_data:
-        txn = Transaction(
-            id=t["id"],
-            merchant_id=merchant.id,
-            customer_id=t["cust_id"],
-            razorpay_payment_id=t["pay_id"],
-            razorpay_order_id=t["order_id"],
-            amount=t["amount"],
-            currency="INR",
-            status=t["status"],
-            failure_code=t["code"],
-            failure_reason=t["reason"],
-            payment_method=t["method"],
-            attempts_count=t["attempts"]
-        )
-        db.add(txn)
+        txn_res = await db.execute(select(Transaction).where(Transaction.id == t["id"]))
+        if not txn_res.scalar_one_or_none():
+            txn = Transaction(
+                id=t["id"],
+                merchant_id=merchant.id,
+                customer_id=t["cust_id"],
+                razorpay_payment_id=t["pay_id"],
+                razorpay_order_id=t["order_id"],
+                amount=t["amount"],
+                currency="INR",
+                status=t["status"],
+                failure_code=t["code"],
+                failure_reason=t["reason"],
+                payment_method=t["method"],
+                attempts_count=t["attempts"]
+            )
+            db.add(txn)
 
-        canonical_category = RecoveryToolRegistry.normalize_failure_category(t["code"]).value
-        wf = RecoveryWorkflow(
-            id=f"rec_{t['id']}",
-            transaction_id=txn.id,
-            state=RecoveryState.PAYMENT_FAILED.value,
-            risk_score=0.15 if t["amount"] < 5000 else (0.85 if "FRAUD" in t["code"] else 0.35),
-            failure_category=canonical_category,
-            recommended_action=InterventionType.NO_ACTION.value,
-            ai_confidence=0.0
-        )
-        db.add(wf)
+            canonical_category = RecoveryToolRegistry.normalize_failure_category(t["code"]).value
+            wf = RecoveryWorkflow(
+                id=f"rec_{t['id']}",
+                transaction_id=txn.id,
+                state=RecoveryState.PAYMENT_FAILED.value,
+                risk_score=0.15 if t["amount"] < 5000 else (0.85 if "FRAUD" in t["code"] else 0.35),
+                failure_category=canonical_category,
+                recommended_action=InterventionType.NO_ACTION.value,
+                ai_confidence=0.0
+            )
+            db.add(wf)
 
-        await AuditService.log_event(
-            db=db,
-            actor=ActorType.RAZORPAY_WEBHOOK,
-            action="PAYMENT_FAILED_INGESTED",
-            workflow_id=f"rec_{t['id']}",
-            transaction_id=txn.id,
-            details={
-                "amount": t["amount"],
-                "failure_code": t["code"],
-                "failure_reason": t["reason"],
-                "customer_id": t["cust_id"],
-                "payment_method": t["method"],
-                "summary": f"Ingested payment failure {t['id']} (INR {t['amount']:,.2f}) - {t['reason']}"
-            }
-        )
+            await AuditService.log_event(
+                db=db,
+                actor=ActorType.RAZORPAY_WEBHOOK,
+                action="PAYMENT_FAILED_INGESTED",
+                workflow_id=f"rec_{t['id']}",
+                transaction_id=txn.id,
+                details={
+                    "amount": t["amount"],
+                    "failure_code": t["code"],
+                    "failure_reason": t["reason"],
+                    "customer_id": t["cust_id"],
+                    "payment_method": t["method"],
+                    "summary": f"Ingested payment failure {t['id']} (INR {t['amount']:,.2f}) - {t['reason']}"
+                }
+            )
 
     await db.commit()
     return {"status": "success", "message": "Demo data successfully seeded"}
